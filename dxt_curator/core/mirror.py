@@ -601,6 +601,16 @@ class GitHubMirrorManager:
             print(f"🔧 Setting up dual remote configuration...")
             self._setup_dual_remotes(repo_path, original_url, mirror_url)
             
+            # Set upstream URL in git config for future reference
+            print(f"🔧 Storing upstream URL in git config...")
+            subprocess.run([
+                'git', '-C', str(repo_path), 'config', 'mirror.upstream-url', original_url
+            ], check=True, capture_output=True)
+            
+            subprocess.run([
+                'git', '-C', str(repo_path), 'config', 'mirror.upstream-repo', original_name
+            ], check=True, capture_output=True)
+            
             # Push to mirror with --mirror flag for complete replication
             print(f"📤 Pushing to mirror...")
             subprocess.run([
@@ -647,15 +657,9 @@ class GitHubMirrorManager:
         mirror_name = mirror_repo['name']
         original_name = original_repo['full_name']
         
-        # Update repository description with attribution
-        description = f"🪞 Mirror of {original_name}"
-        if original_repo.get('description'):
-            description += f" - {original_repo['description']}"
+        # Update repository settings with upstream reference in description
+        description = f"🪞 Mirror of {original_name} | Upstream: {original_repo['html_url']}"
         
-        # Add attribution footer
-        description += f"\n\n⚠️ This is a mirror repository. Please visit {original_repo['html_url']} for issues, PRs, and discussions."
-        
-        # Update repository settings
         update_data = {
             "description": description,
             "homepage": original_repo.get('html_url'),
@@ -663,7 +667,7 @@ class GitHubMirrorManager:
             "has_projects": False,
             "has_wiki": False,
             "allow_squash_merge": False,
-            "allow_merge_commit": False,
+            "allow_merge_commit": True,  # Must allow at least one merge method
             "allow_rebase_merge": False,
             "delete_branch_on_merge": False
         }
@@ -676,109 +680,9 @@ class GitHubMirrorManager:
         else:
             print(f"⚠️  Warning: Failed to update repository settings: {response.text}")
         
-        # Add README with attribution if it doesn't exist
-        self.add_mirror_readme(mirror_repo, original_repo)
+        # Note: We don't add README or setup files to keep mirrors pure
+        # Upstream URL is stored in git config: mirror.upstream-url
     
-    def add_mirror_readme(self, mirror_repo: Dict[str, Any], original_repo: Dict[str, Any]) -> None:
-        """
-        Add README with mirror attribution.
-        
-        Args:
-            mirror_repo: Mirror repository data
-            original_repo: Original repository data
-        """
-        # Check if README already exists
-        readme_url = f"{self.github_api_base}/repos/{mirror_repo['full_name']}/readme"
-        response = self.session.get(readme_url)
-        
-        if response.status_code == 200:
-            print("ℹ️  README already exists, skipping mirror attribution")
-            return
-        
-        # Create mirror attribution README
-        readme_content = f"""# 🪞 Mirror Repository
-
-This is a mirror of [{original_repo['full_name']}]({original_repo['html_url']}).
-
-## ⚠️ Important Notice
-
-**This is a read-only mirror repository.** 
-
-- **Issues**: Please report issues at [{original_repo['full_name']}]({original_repo['html_url']}/issues)
-- **Pull Requests**: Please submit PRs at [{original_repo['full_name']}]({original_repo['html_url']}/pulls)
-- **Discussions**: Please use [{original_repo['full_name']}]({original_repo['html_url']}/discussions)
-
-## 🎯 Purpose
-
-This mirror is maintained by [DXT-Mirror](https://github.com/DXT-Mirror) to provide reliable access to DXT (Claude Desktop Extensions) repositories for the community.
-
-## 📋 Original Repository Information
-
-- **Repository**: [{original_repo['full_name']}]({original_repo['html_url']})
-- **Owner**: [{original_repo['owner']['login']}]({original_repo['owner']['html_url']})
-- **Language**: {original_repo.get('language', 'N/A')}
-- **Stars**: {original_repo.get('stargazers_count', 0)}
-- **Forks**: {original_repo.get('forks_count', 0)}
-
-## 🔄 Sync Information
-
-This mirror is synchronized with the original repository. For the most up-to-date information, please visit the original repository.
-
-### 🛠️ Working with This Mirror
-
-This mirror follows the **MCP-Mirror pattern** for complete repository replication:
-
-```bash
-# For users: Clone this mirror normally
-git clone {mirror_repo['clone_url']}
-cd {mirror_repo['name']}
-
-# For maintainers: Set up dual remotes for syncing
-git remote add mirror {mirror_repo['clone_url']}
-# Note: 'origin' already points to {original_repo['clone_url']}
-
-# Check remote configuration
-git remote -v
-# Should show:
-# origin  {original_repo['clone_url']} (fetch)
-# origin  {original_repo['clone_url']} (push)
-# mirror  {mirror_repo['clone_url']} (fetch)
-# mirror  {mirror_repo['clone_url']} (push)
-
-# To sync this mirror with upstream changes:
-git fetch -p origin          # Fetch and prune from original
-git push --mirror mirror     # Complete sync to mirror
-```
-
-**Remote Setup:**
-- `origin` → Original repository (for fetching updates)
-- `mirror` → Mirror repository (for complete replication with --mirror)
-
----
-
-*This mirror is part of the DXT-Mirror project, sponsored by the [Cloud Security Alliance (CSA)](https://cloudsecurityalliance.org/).*
-"""
-        
-        # Create README file
-        import base64
-        encoded_content = base64.b64encode(readme_content.encode()).decode()
-        
-        readme_data = {
-            "message": "Add mirror attribution README",
-            "content": encoded_content,
-            "committer": {
-                "name": "DXT-Mirror Bot",
-                "email": "noreply@dxt-mirror.org"
-            }
-        }
-        
-        create_url = f"{self.github_api_base}/repos/{mirror_repo['full_name']}/contents/README.md"
-        response = self.session.put(create_url, json=readme_data)
-        
-        if response.status_code == 201:
-            print("📄 Added mirror attribution README")
-        else:
-            print(f"⚠️  Warning: Failed to add mirror README: {response.text}")
     
     def sync_repository(self, original_repo: Dict[str, Any], mirror_repo: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -48,6 +48,12 @@ DXT Curator uses AI the way it's meant to be used:
 - Batch processing with progress tracking
 - Export capabilities for further AI analysis
 
+### 🪞 **Pure Mirror System**
+- Creates perfect copies of upstream repositories
+- No modification of original content
+- Git config storage for upstream tracking
+- MCP-Mirror pattern for seamless maintenance
+
 ## 🛠️ Installation
 
 ```bash
@@ -332,6 +338,39 @@ evaluator = AIEvaluator(api_provider="anthropic")
 for repo in filtered:
     decision = evaluator.evaluate_repo(repo)
     print(f"{repo.full_name}: {decision['decision']}")
+```
+
+### Mirror Management
+
+```bash
+# Create mirror repository
+python scripts/create_mirror_repo.py owner/repo
+
+# Sync repository (pure upstream content)
+python scripts/simple_sync.py owner/repo
+
+# Get upstream URL from any mirror
+python scripts/get_upstream.py path/to/mirror --setup
+
+# Bulk sync all mirrors
+python scripts/sync_mirrors.py --all
+```
+
+### Working with Pure Mirrors
+
+```bash
+# Clone a pure mirror (contains only upstream content)
+git clone git@github.com:DXT-Mirror/owner_repo.git
+cd owner_repo
+
+# Auto-discover and setup upstream remote
+python /path/to/scripts/get_upstream.py . --setup
+
+# Or manually add upstream
+git remote add upstream https://github.com/owner/repo.git
+
+# Get updates from original
+git fetch upstream
 ```
 
 ### Integration with Other Tools
