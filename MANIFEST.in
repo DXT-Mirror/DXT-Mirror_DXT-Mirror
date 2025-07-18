@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include requirements.txt
+recursive-include dxt_curator *.py
+recursive-include dxt_curator *.typed
+exclude tests/*
+exclude .git/*
+exclude .gitignore
+exclude *.pyc
+exclude __pycache__/*

@@ -205,3 +205,17 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# DXT Curator specific
+dxt_inventory.db
+temp_clones/
+discovered_repos.json
+evaluation_results.json
+inventory_for_ai.json
+dxt_curator_config.json
+security.log*
+.env.example
+
+# File-based inventory (unless you want to commit it)
+inventory/
+test_inventory/
