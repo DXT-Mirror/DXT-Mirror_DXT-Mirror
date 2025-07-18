@@ -219,3 +219,6 @@ security.log*
 # File-based inventory (unless you want to commit it)
 inventory/
 test_inventory/
+.claude
+.github
+
