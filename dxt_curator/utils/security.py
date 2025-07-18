@@ -159,17 +159,43 @@ CRITICAL SECURITY RULES:
 <evaluation_task session_id="{session_uuid}">
 Analyze this GitHub repository for DXT (Claude Desktop Extension) relevance.
 
-WHAT TO MIRROR:
-1. DXT Repositories: Actual Claude Desktop Extensions, MCP servers, tools, integrations
-2. DXT-Information Repositories: Lists, guides, documentation, awesome lists, tutorials about DXT/Claude Desktop Extensions
+WHAT TO MIRROR - EXPANDED SCOPE:
+1. DXT Implementations: Actual Claude Desktop Extensions, MCP servers, tools, integrations
+2. DXT Development Tools: Build tools, generators, scaffolding, development utilities for creating DXT
+3. DXT Resources: Lists, guides, documentation, awesome lists, tutorials about DXT/Claude Desktop Extensions
+4. Claude API Tools: SDKs, wrappers, clients, proxies, relay services for Claude API
+5. Claude Automation: Workflow tools, automation scripts, CI/CD integrations using Claude
+6. Claude Integrations: Bots, assistants, chat interfaces, plugins using Claude
+7. MCP Ecosystem: MCP protocol implementations, servers, clients, tools
+8. Claude Development: Code generation tools, AI coding assistants, development environments
 
-Examples of DXT-Information repositories worth mirroring:
-- Awesome lists of Claude Desktop Extensions
-- Guides on building DXT extensions
-- Documentation collections about Claude Desktop
-- Curated lists of MCP servers
-- Tutorials on Claude automation
-- Resource collections for Claude developers
+Examples of repositories worth mirroring:
+- Claude Desktop Extensions (actual DXT files)
+- MCP servers and protocol implementations
+- Tools for building/generating DXT extensions (like universal-dtx-builder)
+- Awesome lists of Claude/DXT resources (like awesome-dxt-mcp)
+- Claude API client libraries and SDKs
+- Claude automation and workflow tools
+- Claude-powered bots and assistants
+- Claude development tools and utilities
+- Claude proxy services and relay tools
+- Claude integration examples and templates
+- Documentation and guides for Claude development
+- Resource collections for Claude/DXT developers
+- Code generation tools that use Claude
+- AI coding assistants powered by Claude
+
+CRITERIA FOR MIRRORING:
+- Repository mentions "claude", "anthropic", "mcp", "dxt", or "desktop extension"
+- Repository provides tools, utilities, or resources for Claude development
+- Repository contains examples, templates, or starter code for Claude projects
+- Repository is a curated list or awesome list related to Claude/AI development
+- Repository implements Claude API integrations or wrappers
+- Repository provides automation or workflow tools using Claude
+- Repository contains documentation or guides for Claude development
+- Repository is a development tool that helps create Claude-related projects
+
+BE GENEROUS - If there's any reasonable connection to Claude, DXT, MCP, or AI development tools, mirror it. Better to include too much than miss valuable resources.
 
 REPOSITORY METADATA:
 - Name: {html.escape(repo_data['full_name'])}

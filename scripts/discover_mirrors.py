@@ -64,6 +64,8 @@ Examples:
                        help='Show what would be done without doing it')
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose output')
+    parser.add_argument('--mirror-root', metavar='PATH',
+                       help='Root directory for local mirror repositories')
     
     args = parser.parse_args()
     
@@ -353,6 +355,8 @@ def sync_all_mirrors(mirrors: List[Dict[str, Any]], dry_run: bool = False, verbo
                 cmd = ['python', str(script_path), owner_repo]
                 if not verbose:
                     cmd.append('--quiet')
+                if args.mirror_root:
+                    cmd.extend(['--mirror-root', args.mirror_root])
                 
                 result = subprocess.run(cmd, capture_output=not verbose)
                 

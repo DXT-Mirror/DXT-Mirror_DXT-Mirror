@@ -4,6 +4,46 @@ This directory contains utility scripts for managing DXT repository mirrors usin
 
 ## 🚀 Quick Start Scripts
 
+### `dxt_workflow.py` - Complete DXT Workflow Automation
+**Full automation for discovery, evaluation, and mirroring**
+
+```bash
+# Discover up to 50 repos, mirror up to 10 approved ones
+python scripts/dxt_workflow.py --max-repos-to-examine 50 --max-repos-to-mirror 10
+
+# Skip discovery, only mirror 5 already-approved repositories
+python scripts/dxt_workflow.py --max-repos-to-examine 0 --max-repos-to-mirror 5
+
+# Only examine 100 repos, don't create mirrors
+python scripts/dxt_workflow.py --max-repos-to-examine 100 --max-repos-to-mirror 0
+
+# Custom search with specific terms
+python scripts/dxt_workflow.py --max-repos-to-examine 20 --max-repos-to-mirror 5 --search-terms "claude dxt,anthropic"
+
+# Dry run to see what would happen
+python scripts/dxt_workflow.py --max-repos-to-examine 10 --max-repos-to-mirror 3 --dry-run --verbose
+
+# Use persistent mirror directory
+python scripts/dxt_workflow.py --max-repos-to-examine 20 --max-repos-to-mirror 5 --mirror-root /Users/kurt/GitHub/DXT-Mirror
+```
+
+**What it does:**
+1. **Discovery Phase**: Strategic GitHub search for DXT-related repositories
+2. **AI Evaluation**: Uses OpenAI/Anthropic to evaluate repository relevance
+3. **Inventory Management**: Tracks repositories and their status in SQLite database
+4. **Mirroring Phase**: Creates GitHub mirrors and syncs content
+5. **Progress Tracking**: Provides detailed status reports and summaries
+
+**Key Features:**
+- ✅ Configurable discovery and mirroring limits
+- ✅ AI-powered repository evaluation
+- ✅ Zero-value options for selective operation
+- ✅ GitHub search result capture in inventory
+- ✅ Complete workflow automation
+- ✅ Dry-run support for testing
+
+## 🚀 Quick Start Scripts
+
 ### `simple_sync.py` - Standalone Repository Sync
 **Recommended for most users**
 
@@ -19,14 +59,22 @@ python scripts/simple_sync.py owner/repo --verbose
 
 # Dry run (see what would happen)
 python scripts/simple_sync.py owner/repo --dry-run
+
+# Use persistent mirror directory
+python scripts/simple_sync.py owner/repo --mirror-root /Users/kurt/GitHub/DXT-Mirror
 ```
 
 **What it does:**
-1. Clones the original repository (origin → upstream)
+1. Clones the original repository (origin → upstream) OR updates existing local copy
 2. Adds mirror remote (mirror → DXT-Mirror/owner_repo)  
 3. Stores upstream URL in git config (`mirror.upstream-url`)
 4. Fetches from origin with prune
 5. Pushes to mirror with `--mirror` flag (pure upstream content only)
+
+**With `--mirror-root`:**
+- Creates persistent local repositories in specified directory
+- Reuses existing clones for efficiency (no re-downloading)
+- Perfect for managing multiple repositories in organized structure
 
 ### `create_mirror_repo.py` - Create Mirror Repository
 **For creating GitHub repositories manually**
@@ -83,6 +131,9 @@ python scripts/discover_mirrors.py --list --filter claude
 
 # Dry run (see what would be done)
 python scripts/discover_mirrors.py --sync --dry-run
+
+# Use persistent mirror directory for sync operations
+python scripts/discover_mirrors.py --sync --mirror-root /Users/kurt/GitHub/DXT-Mirror
 ```
 
 ## 🔧 Advanced Scripts
@@ -150,6 +201,35 @@ git remote -v
 - `cleanup.py` - Clean up temporary files and old data
 - `quick_start.py` - Set up development environment
 - `test_setup.py` - Test environment configuration
+
+## 📁 Mirror Root Directory
+
+All scripts support `--mirror-root PATH` for persistent local repository management:
+
+```bash
+# Recommended setup for managing multiple repositories
+export DXT_MIRROR_ROOT="/Users/kurt/GitHub/DXT-Mirror"
+
+# All scripts can use this directory
+python scripts/simple_sync.py owner/repo --mirror-root $DXT_MIRROR_ROOT
+python scripts/dxt_workflow.py --max-repos-to-examine 20 --max-repos-to-mirror 5 --mirror-root $DXT_MIRROR_ROOT
+python scripts/discover_mirrors.py --sync --mirror-root $DXT_MIRROR_ROOT
+```
+
+**Benefits of Mirror Root:**
+- ✅ **Persistent Storage** - Repositories stay on disk between operations
+- ✅ **Efficiency** - No re-downloading for subsequent syncs
+- ✅ **Organized Structure** - All mirrors in one directory tree
+- ✅ **Reusable for Evaluation** - Same repo can be used for AI analysis and mirroring
+- ✅ **Easy Management** - Browse, edit, and work with repositories locally
+
+**Directory Structure:**
+```
+/Users/kurt/GitHub/DXT-Mirror/
+├── owner1_repo1/          # Mirror of github.com/owner1/repo1
+├── owner2_repo2/          # Mirror of github.com/owner2/repo2
+└── anthropic_claude-api/  # Mirror of github.com/anthropic/claude-api
+```
 
 ## 🔑 Environment Variables
 

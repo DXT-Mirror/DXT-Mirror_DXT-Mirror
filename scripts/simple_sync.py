@@ -44,6 +44,8 @@ This will sync DXT-Mirror/milisp_awesome-claude-dxt with github.com/milisp/aweso
                        help='Enable verbose output')
     parser.add_argument('--quiet', '-q', action='store_true',
                        help='Suppress output except errors')
+    parser.add_argument('--mirror-root', metavar='PATH',
+                       help='Root directory for local mirror repositories (default: uses temp dir)')
     
     args = parser.parse_args()
     
@@ -76,12 +78,53 @@ This will sync DXT-Mirror/milisp_awesome-claude-dxt with github.com/milisp/aweso
         print("🔍 Dry run - would perform sync but taking no action")
         return 0
     
-    # Create temporary directory
-    with tempfile.TemporaryDirectory(prefix="dxt_sync_") as temp_dir:
-        repo_path = Path(temp_dir) / repo_name
+    # Determine working directory
+    if args.mirror_root:
+        # Use persistent mirror root directory
+        mirror_root = Path(args.mirror_root).expanduser()
+        mirror_root.mkdir(parents=True, exist_ok=True)
+        repo_path = mirror_root / mirror_name
+        use_temp_dir = False
         
-        try:
-            # Step 1: Clone original repository
+        if not args.quiet:
+            print(f"📁 Using mirror root: {mirror_root}")
+    else:
+        # Use temporary directory (legacy behavior)
+        temp_dir = tempfile.mkdtemp(prefix="dxt_sync_")
+        repo_path = Path(temp_dir) / repo_name
+        use_temp_dir = True
+        
+        if args.verbose:
+            print(f"📁 Using temporary directory: {temp_dir}")
+    
+    try:
+        
+        if repo_path.exists():
+            # Repository already exists - update it
+            if args.verbose:
+                print(f"📂 Repository exists, updating: {repo_path}")
+            
+            # Check if mirror remote exists, add if needed
+            result = subprocess.run([
+                'git', '-C', str(repo_path), 'remote'
+            ], capture_output=True, text=True)
+            
+            if 'mirror' not in result.stdout:
+                if args.verbose:
+                    print(f"🔧 Adding mirror remote...")
+                subprocess.run([
+                    'git', '-C', str(repo_path), 'remote', 'add', 'mirror', mirror_url
+                ], check=True, capture_output=not args.verbose)
+            
+            # Fetch from origin
+            if args.verbose:
+                print(f"📡 Fetching updates from origin...")
+            subprocess.run([
+                'git', '-C', str(repo_path), 'fetch', '-p', 'origin'
+            ], check=True, capture_output=not args.verbose)
+            
+        else:
+            # Clone repository fresh
             if args.verbose:
                 print(f"📥 Cloning {original_url}...")
             
@@ -89,49 +132,46 @@ This will sync DXT-Mirror/milisp_awesome-claude-dxt with github.com/milisp/aweso
                 'git', 'clone', original_url, str(repo_path)
             ], check=True, capture_output=not args.verbose)
             
-            # Step 2: Add mirror remote
+            # Add mirror remote
             if args.verbose:
                 print(f"🔧 Adding mirror remote...")
             
             subprocess.run([
                 'git', '-C', str(repo_path), 'remote', 'add', 'mirror', mirror_url
             ], check=True, capture_output=not args.verbose)
-            
-            # Step 3: Fetch from origin with prune
-            if args.verbose:
-                print(f"📡 Fetching from origin with prune...")
-            
-            subprocess.run([
-                'git', '-C', str(repo_path), 'fetch', '-p', 'origin'
-            ], check=True, capture_output=not args.verbose)
-            
-            # Step 4: Push to mirror with --mirror
-            if args.verbose:
-                print(f"📤 Pushing to mirror with --mirror...")
-            
-            subprocess.run([
-                'git', '-C', str(repo_path), 'push', '--mirror', 'mirror'
-            ], check=True, capture_output=not args.verbose)
-            
-            if not args.quiet:
-                print(f"✅ Successfully synced {args.repo}")
-            
-            if args.verbose:
-                # Show remote configuration
-                print(f"\n📋 Remote configuration:")
-                result = subprocess.run([
-                    'git', '-C', str(repo_path), 'remote', '-v'
-                ], capture_output=True, text=True)
-                print(result.stdout)
-            
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Sync failed: {e}")
-            if e.stderr:
-                print(f"   Error details: {e.stderr.decode()}")
-            return 1
-        except Exception as e:
-            print(f"❌ Unexpected error: {e}")
-            return 1
+        
+        # Push to mirror with --mirror
+        if args.verbose:
+            print(f"📤 Pushing to mirror with --mirror...")
+        
+        subprocess.run([
+            'git', '-C', str(repo_path), 'push', '--mirror', 'mirror'
+        ], check=True, capture_output=not args.verbose)
+        
+        if not args.quiet:
+            print(f"✅ Successfully synced {args.repo}")
+        
+        if args.verbose:
+            # Show remote configuration
+            print(f"\n📋 Remote configuration:")
+            result = subprocess.run([
+                'git', '-C', str(repo_path), 'remote', '-v'
+            ], capture_output=True, text=True)
+            print(result.stdout)
+        
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Sync failed: {e}")
+        if e.stderr:
+            print(f"   Error details: {e.stderr.decode()}")
+        return 1
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return 1
+    finally:
+        # Clean up temporary directory if used
+        if use_temp_dir and 'temp_dir' in locals():
+            import shutil
+            shutil.rmtree(temp_dir, ignore_errors=True)
     
     return 0
 

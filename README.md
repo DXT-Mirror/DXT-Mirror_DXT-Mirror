@@ -104,6 +104,46 @@ Create `dxt_curator_config.json` for custom settings:
 }
 ```
 
+## 🚀 Quick Start
+
+### Using the Main Entrypoint Script
+
+The easiest way to get started is with the main entrypoint script:
+
+```bash
+# Show system status and check configuration
+python 00-dxt-mirror.py status
+
+# Quick workflow: discover 20 repos, mirror 5 approved ones  
+python 00-dxt-mirror.py workflow --discover 20 --mirror 5
+
+# With custom search terms for broader discovery
+python 00-dxt-mirror.py workflow --discover 30 --mirror 8 --search-terms "claude-api,mcp-server,claude-tools,anthropic"
+
+# Discovery only (no mirroring)
+python 00-dxt-mirror.py discover --limit 30
+
+# Mirror only (skip discovery)
+python 00-dxt-mirror.py mirror --limit 10
+
+# Sync specific repository
+python 00-dxt-mirror.py sync milisp/awesome-claude-dxt
+
+# Bulk operations
+python 00-dxt-mirror.py bulk --list           # List all mirrors
+python 00-dxt-mirror.py bulk --sync-all       # Sync all mirrors
+python 00-dxt-mirror.py inventory             # Show inventory stats
+
+# Re-evaluate inventory with updated criteria
+python 00-dxt-mirror.py reeval                # Re-evaluate all repositories
+python 00-dxt-mirror.py reeval --status rejected --limit 20  # Re-evaluate rejected ones
+```
+
+**All commands support:**
+- `--mirror-root /path/to/mirrors` - Persistent local storage
+- `--dry-run` - Preview operations without executing
+- `--verbose` - Detailed output
+
 ## 📚 Quick Start
 
 ### Command Line Interface

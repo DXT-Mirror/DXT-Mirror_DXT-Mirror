@@ -286,27 +286,113 @@ class StrategicGitHubSearch:
             List of query configurations with search terms and parameters
         """
         return [
+            # Core Claude Terms
             {
-                'query': 'claude desktop extension',
+                'query': 'claude',
                 'priority': 'high',
                 'min_stars': 1,
-                'max_results': 50,
-                'rationale': 'Direct match for Claude Desktop Extensions'
+                'max_results': 100,
+                'rationale': 'Broad search for Claude-related repositories'
             },
             {
-                'query': 'claude mcp server',
+                'query': 'anthropic',
+                'priority': 'high',
+                'min_stars': 1,
+                'max_results': 80,
+                'rationale': 'Anthropic ecosystem repositories'
+            },
+            {
+                'query': 'claude-api',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 60,
+                'rationale': 'Claude API integrations and wrappers'
+            },
+            {
+                'query': 'claude-desktop',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 50,
+                'rationale': 'Claude Desktop specific tools'
+            },
+            
+            # MCP and Protocol Terms
+            {
+                'query': 'mcp',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 70,
+                'rationale': 'Model Context Protocol implementations'
+            },
+            {
+                'query': 'mcp-server',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 40,
+                'rationale': 'MCP server implementations'
+            },
+            {
+                'query': 'claude-mcp',
                 'priority': 'high',
                 'min_stars': 0,
                 'max_results': 30,
-                'rationale': 'MCP (Model Context Protocol) servers for Claude'
+                'rationale': 'Claude MCP integrations'
+            },
+            
+            # Extension and Tool Terms
+            {
+                'query': 'claude-tools',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 40,
+                'rationale': 'General Claude tools and utilities'
             },
             {
-                'query': 'anthropic claude tool',
+                'query': 'claude-extension',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 30,
+                'rationale': 'Claude extensions and plugins'
+            },
+            {
+                'query': 'claude-bot',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 35,
+                'rationale': 'Claude-powered bots and assistants'
+            },
+            {
+                'query': 'claude-assistant',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 25,
+                'rationale': 'Claude assistant implementations'
+            },
+            
+            # Integration and Workflow Terms
+            {
+                'query': 'claude-integration',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 30,
+                'rationale': 'Claude integrations with other systems'
+            },
+            {
+                'query': 'claude-automation',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 25,
+                'rationale': 'Automation tools using Claude'
+            },
+            {
+                'query': 'claude-workflow',
                 'priority': 'medium',
                 'min_stars': 0,
                 'max_results': 20,
-                'rationale': 'General Claude tools from Anthropic ecosystem'
+                'rationale': 'Workflow tools powered by Claude'
             },
+            
+            # Specific Use Cases
             {
                 'query': 'claude computer use',
                 'priority': 'high',
@@ -315,32 +401,154 @@ class StrategicGitHubSearch:
                 'rationale': 'Computer use functionality with Claude'
             },
             {
-                'query': 'claude automation workflow',
+                'query': 'claude-3',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 25,
+                'rationale': 'Claude 3 specific implementations'
+            },
+            {
+                'query': 'claude-3.5',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 20,
+                'rationale': 'Claude 3.5 specific implementations'
+            },
+            
+            # Alternative Terms
+            {
+                'query': 'anthropic-claude',
                 'priority': 'medium',
                 'min_stars': 0,
                 'max_results': 15,
-                'rationale': 'Automation and workflow tools using Claude'
+                'rationale': 'Alternative naming for Claude projects'
             },
             {
-                'query': 'claude api integration',
+                'query': 'claude-sdk',
                 'priority': 'medium',
                 'min_stars': 0,
                 'max_results': 15,
-                'rationale': 'API integrations and wrappers for Claude'
+                'rationale': 'Claude SDK implementations'
             },
             {
-                'query': 'claude desktop tools',
+                'query': 'claude-cli',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 15,
+                'rationale': 'Command-line tools for Claude'
+            },
+            
+            # DXT-specific terms
+            {
+                'query': 'dxt',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 50,
+                'rationale': 'DXT (Desktop Extension) repositories'
+            },
+            {
+                'query': 'desktop-extension',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 30,
+                'rationale': 'Desktop extension implementations'
+            },
+            {
+                'query': 'claude-desktop-extension',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 20,
+                'rationale': 'Claude Desktop Extension specific'
+            },
+            {
+                'query': 'universal-dtx-builder',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 10,
+                'rationale': 'DXT build tools and generators'
+            },
+            
+            # Awesome lists and resources
+            {
+                'query': 'awesome-claude',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 20,
+                'rationale': 'Awesome lists for Claude resources'
+            },
+            {
+                'query': 'awesome-dxt',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 15,
+                'rationale': 'Awesome lists for DXT resources'
+            },
+            {
+                'query': 'awesome-mcp',
+                'priority': 'high',
+                'min_stars': 0,
+                'max_results': 15,
+                'rationale': 'Awesome lists for MCP resources'
+            },
+            {
+                'query': 'awesome-anthropic',
                 'priority': 'medium',
                 'min_stars': 0,
                 'max_results': 10,
-                'rationale': 'Desktop tools that work with Claude'
+                'rationale': 'Awesome lists for Anthropic resources'
+            },
+            
+            # Development and build tools
+            {
+                'query': 'claude-generator',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 15,
+                'rationale': 'Code generators for Claude projects'
             },
             {
-                'query': 'mcp protocol server',
+                'query': 'claude-template',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 20,
+                'rationale': 'Templates for Claude projects'
+            },
+            {
+                'query': 'claude-starter',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 15,
+                'rationale': 'Starter projects for Claude development'
+            },
+            {
+                'query': 'claude-boilerplate',
                 'priority': 'medium',
                 'min_stars': 0,
                 'max_results': 10,
-                'rationale': 'MCP protocol implementations'
+                'rationale': 'Boilerplate code for Claude projects'
+            },
+            
+            # AI coding and development
+            {
+                'query': 'ai-coding-assistant',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 20,
+                'rationale': 'AI coding assistants (may use Claude)'
+            },
+            {
+                'query': 'ai-development-tools',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 15,
+                'rationale': 'AI development tools and utilities'
+            },
+            {
+                'query': 'llm-tools',
+                'priority': 'medium',
+                'min_stars': 0,
+                'max_results': 25,
+                'rationale': 'LLM tools that may include Claude'
             }
         ]
     
