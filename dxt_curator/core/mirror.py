@@ -489,39 +489,38 @@ class GitHubMirrorManager:
         else:
             raise Exception(f"Repository creation failed: {response.status_code} {response.text}")
     
-    def setup_dual_remotes(self, repo_path: Path, original_url: str, mirror_url: str) -> None:
+    def _setup_dual_remotes(self, repo_path: Path, original_url: str, mirror_url: str) -> None:
         """
-        Set up dual remotes for a repository.
+        Set up dual remotes following the proven MCP-Mirror pattern.
+        
+        The workflow is:
+        1. git clone original_url (origin → upstream source automatically)
+        2. git remote add mirror mirror_url (predictable mirror naming)
+        3. git push --mirror mirror (complete replication)
+        
+        This gives users a natural workflow:
+        - git fetch origin (get updates from upstream)
+        - git push --mirror mirror (sync to our mirror)
         
         Args:
-            repo_path: Path to local repository
-            original_url: Original repository URL (for fetching)
-            mirror_url: Mirror repository URL (for pushing)
+            repo_path: Path to the cloned repository
+            original_url: URL of the original repository
+            mirror_url: URL of the mirror repository with auth token
         """
         try:
-            repo = git.Repo(repo_path)
+            # The repository is already cloned with origin pointing to original_url
+            # Just add the mirror remote
+            subprocess.run([
+                'git', '-C', str(repo_path), 'remote', 'add', 'mirror', mirror_url
+            ], check=True, capture_output=True)
             
-            # Remove default origin
-            try:
-                repo.delete_remote('origin')
-            except:
-                pass
+            print(f"   ✅ Configured dual remotes:")
+            print(f"      📡 origin → {original_url} (fetch from upstream)")
+            print(f"      📤 mirror → {mirror_url} (push with --mirror)")
             
-            # Add original remote (for fetching)
-            original_remote = repo.create_remote('original', original_url)
-            
-            # Add mirror remote (for pushing)
-            mirror_remote = repo.create_remote('mirror', mirror_url)
-            
-            print(f"🔗 Set up dual remotes:")
-            print(f"   📥 original: {original_url}")
-            print(f"   📤 mirror: {mirror_url}")
-            
-            return original_remote, mirror_remote
-            
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
             raise Exception(f"Failed to set up dual remotes: {e}")
-    
+
     def clone_and_mirror(self, original_repo: Dict[str, Any], temp_dir: Optional[str] = None) -> Dict[str, Any]:
         """
         Clone original repository and set up mirror.
@@ -593,17 +592,19 @@ class GitHubMirrorManager:
         try:
             print(f"📥 Cloning {original_name}...")
             
-            # Clone with bare option for better mirroring
+            # Clone the original repository normally (not bare)
             subprocess.run([
-                'git', 'clone', '--bare', original_url, str(repo_path)
+                'git', 'clone', original_url, str(repo_path)
             ], check=True, capture_output=True)
             
-            # Change to repo directory and push to mirror
-            print(f"📤 Pushing to mirror...")
+            # Set up dual remotes for proper mirroring workflow
+            print(f"🔧 Setting up dual remote configuration...")
+            self._setup_dual_remotes(repo_path, original_url, mirror_url)
             
-            # Push all branches and tags to mirror
+            # Push to mirror with --mirror flag for complete replication
+            print(f"📤 Pushing to mirror...")
             subprocess.run([
-                'git', '--git-dir', str(repo_path), 'push', '--mirror', mirror_url
+                'git', '-C', str(repo_path), 'push', '--mirror', 'mirror'
             ], check=True, capture_output=True)
             
             # Update mirror repository settings
@@ -723,6 +724,36 @@ This mirror is maintained by [DXT-Mirror](https://github.com/DXT-Mirror) to prov
 
 This mirror is synchronized with the original repository. For the most up-to-date information, please visit the original repository.
 
+### 🛠️ Working with This Mirror
+
+This mirror follows the **MCP-Mirror pattern** for complete repository replication:
+
+```bash
+# For users: Clone this mirror normally
+git clone {mirror_repo['clone_url']}
+cd {mirror_repo['name']}
+
+# For maintainers: Set up dual remotes for syncing
+git remote add mirror {mirror_repo['clone_url']}
+# Note: 'origin' already points to {original_repo['clone_url']}
+
+# Check remote configuration
+git remote -v
+# Should show:
+# origin  {original_repo['clone_url']} (fetch)
+# origin  {original_repo['clone_url']} (push)
+# mirror  {mirror_repo['clone_url']} (fetch)
+# mirror  {mirror_repo['clone_url']} (push)
+
+# To sync this mirror with upstream changes:
+git fetch -p origin          # Fetch and prune from original
+git push --mirror mirror     # Complete sync to mirror
+```
+
+**Remote Setup:**
+- `origin` → Original repository (for fetching updates)
+- `mirror` → Mirror repository (for complete replication with --mirror)
+
 ---
 
 *This mirror is part of the DXT-Mirror project, sponsored by the [Cloud Security Alliance (CSA)](https://cloudsecurityalliance.org/).*
@@ -778,14 +809,24 @@ This mirror is synchronized with the original repository. For the most up-to-dat
         try:
             print(f"🔄 Syncing {original_repo['full_name']}...")
             
-            # Clone original repository
+            # Clone original repository normally
             subprocess.run([
-                'git', 'clone', '--bare', original_url, str(repo_path)
+                'git', 'clone', original_url, str(repo_path)
             ], check=True, capture_output=True)
             
-            # Push to mirror
+            # Add mirror remote
             subprocess.run([
-                'git', '--git-dir', str(repo_path), 'push', '--mirror', mirror_url
+                'git', '-C', str(repo_path), 'remote', 'add', 'mirror', mirror_url
+            ], check=True, capture_output=True)
+            
+            # Fetch from origin (prune deleted branches)
+            subprocess.run([
+                'git', '-C', str(repo_path), 'fetch', '-p', 'origin'
+            ], check=True, capture_output=True)
+            
+            # Push to mirror with --mirror flag
+            subprocess.run([
+                'git', '-C', str(repo_path), 'push', '--mirror', 'mirror'
             ], check=True, capture_output=True)
             
             result = {
